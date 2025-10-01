@@ -1,0 +1,77 @@
+name: Promote Image to Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "Docker image to promote"
+        required: true
+        type: string
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Determine target repo
+        id: repo
+        run: |
+          if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
+            echo "REPO=all-rounder/favor3-staging-cd-repo" >> $GITHUB_ENV
+          else
+            echo "REPO=all-rounder/favor3-prod-cd-repo" >> $GITHUB_ENV
+          fi
+
+      - name: Checkout target CD repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.REPO }}
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Create promotion branch
+        run: |
+          BRANCH="promote-${{ github.event.inputs.environment }}-${{ github.run_id }}"
+          git checkout -b $BRANCH
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+
+      - name: Update deployment manifest
+        run: |
+          IMAGE="${{ github.event.inputs.image }}"
+          yq e -i ".spec.template.spec.containers[0].image = \"$IMAGE\"" k8s/deployment.yaml
+
+      - name: Commit changes
+        run: |
+          git config user.name "ci-bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          git add k8s/deployment.yaml
+          git commit -m "Promote $IMAGE to ${{ github.event.inputs.environment }}"
+
+      - name: Push branch
+        run: git push origin $BRANCH
+
+      - name: Create PR
+        run: |
+          gh pr create \
+            --repo ${{ env.REPO }} \
+            --base main \
+            --head $BRANCH \
+            --title "Promote $IMAGE to ${{ github.event.inputs.environment }}" \
+            --body "Promote image \`$IMAGE\` to \`${{ github.event.inputs.environment }}\`"
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+
+      - name: Assign reviewers
+        uses: johnmanjiro13/auto-reviewer-assign@v0.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          reviewers: |
+            devops-lead
+            qa-team
+            release-manager

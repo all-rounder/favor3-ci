@@ -1,0 +1,29 @@
+name: Promote Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Where to promote (staging/prod)"
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod
+      image:
+        description: "Image tag to promote (from dev)"
+        required: true
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create PR in target CD repo
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          commit-message: "Promote ${{ github.event.inputs.image }} to ${{ github.event.inputs.environment }}"
+          branch: "promote-${{ github.event.inputs.environment }}-${{ github.run_id }}"
+          title: "Promote image to ${{ github.event.inputs.environment }}"
+          body: "Promote image `${{ github.event.inputs.image }}` to ${{ github.event.inputs.environment }}"
+          push-to-fork: your-org/${{ github.event.inputs.environment }}-cd-repo
