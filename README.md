@@ -1,3 +1,9 @@
+This repo stores CI pipeline codes for Jenkins, GitHub Action.
+
+Copy ci.yaml and promote.yaml to .github/workflows folder under the source code repo.
+
+Copy Dockerfile and .dockerignore to root folder under the source code repo
+
 # Source Code
 
 - React, Node.js, Next.js, Tailwind CSS
@@ -12,7 +18,7 @@
 
 # Configure Files
 
-- Dockerfile
+- Dockerfile (Next.js, multi-stages, standaone/server.js)
 - Kubernetes YAML files
 
 # CI Pipeline Steps
@@ -62,7 +68,15 @@
 
 # CI repo structure
 
-
+```
+favor3-ci/
+├── github-action/
+├── Dockerfile  # https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
+├── .dockerignore
+├── README.md
+├── sonar-project.properties
+├──
+```
 
 # Choices
 
