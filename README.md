@@ -58,8 +58,10 @@ Copy Dockerfile and .dockerignore to root folder under the source code repo
 # Steps - GitHub Action
 
 - Setup an EC2 instance as Jenkins server
-- Install tools (AWS CLI, Docker, Jenkins, kubectl, helm)
-- Setup Jenkins CI pipeline
+- EC2: Install tools (AWS CLI, Docker, Jenkins, kubectl, helm)
+- GitHub: Generate Personal Access Token (Setting -> Developer Settings -> Tokens (classic))
+- Setup GitHub secrets under favor3 repo
+- Setup GitHub Action CI pipeline
 - Test CI pipeline
 - Setup EKS cluster as CD dev environment
 - Install ArgoCD, Image Updater, Promethus, Grafana
